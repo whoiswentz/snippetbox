@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	models "github.com/whoiswentz/snippetbox/pkg"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -22,6 +24,14 @@ func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
 
+func (app *application) addDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	if td == nil {
+		td = &models.TemplateData{}
+	}
+	td.CurrentYear = time.Now().Year()
+	return td
+}
+
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *models.TemplateData) {
 	ts, ok := app.templateCache[name]
 	if !ok {
@@ -29,7 +39,13 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 		return
 	}
 
-	if err := ts.Execute(w, td); err != nil {
+	buf := new(bytes.Buffer)
+	if err := ts.Execute(buf, app.addDefaultData(td, r)); err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	if _, err := buf.WriteTo(w); err != nil {
 		app.serverError(w, err)
 	}
 }
