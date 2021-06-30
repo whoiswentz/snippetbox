@@ -3,11 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	models "github.com/whoiswentz/snippetbox/pkg"
 	"net/http"
 	"strconv"
-	"text/template"
-
-	models "github.com/whoiswentz/snippetbox/pkg"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -22,25 +20,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range s {
-		fmt.Println(snippet)
-	}
-
-	files := []string{
-		"./ui/html/home.page.gohtml",
-		"./ui/html/base.layout.gohtml",
-		"./ui/html/footer.partial.gohtml",
-	}
-
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	if err := tmpl.Execute(w, nil); err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "home.page.gohtml", &models.TemplateData{
+		Snippets: s,
+	})
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -61,22 +43,9 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/show.page.gohtml",
-		"./ui/html/base.layout.gohtml",
-		"./ui/html/footer.partial.gohtml",
-	}
-
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	templateData := models.TemplateData{Snippet: s}
-	if err := tmpl.Execute(w, templateData); err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, r, "show.page.gohtml", &models.TemplateData{
+		Snippet: s,
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {

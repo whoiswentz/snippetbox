@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"text/template"
 )
 
 type application struct {
@@ -15,6 +16,8 @@ type application struct {
 	errLog  *log.Logger
 
 	snippets *mysql.SnippetModel
+
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -31,10 +34,15 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := NewTemplateCache("./ui/html/")
+	if err != nil {
+		errLog.Fatal(err)
+	}
 	app := application{
 		infoLog:  infoLog,
 		errLog:   errLog,
 		snippets: mysql.NewSnippetModel(db),
+		templateCache: templateCache,
 	}
 
 	srv := &http.Server{
