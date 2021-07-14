@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	models "github.com/whoiswentz/snippetbox/pkg"
+	"github.com/whoiswentz/snippetbox/pkg/forms"
 	"net/http"
 	"strconv"
 )
@@ -45,20 +46,35 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "create.page.gohtml", nil)
+	app.render(w, r, "create.page.gohtml", &models.TemplateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := "7"
+	if err := r.ParseForm(); err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
 
-	id, err := app.snippets.Insert(title, content, expires)
+	form := forms.New(r.PostForm)
+	form.Required("title", "content", "expires")
+	form.MaxLength("title", 100)
+	form.PermittedValues("expires", "365", "7", "1")
+
+	if !form.Valid() {
+		app.render(w, r, "create.page.gohtml", &models.TemplateData{
+			Form: form,
+		})
+		return
+	}
+
+	id, err := app.snippets.Insert(form.Get("title"), form.Get("content"), form.Get("expires"))
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	redirectTo := fmt.Sprintf("/snippet?id=%d", id)
+	redirectTo := fmt.Sprintf("/snippet/%d", id)
 	http.Redirect(w, r, redirectTo, http.StatusSeeOther)
 }
