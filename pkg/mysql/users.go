@@ -45,12 +45,6 @@ func (m *UserModel) Insert(name, email, password string) error {
 
 	stmt := `INSERT INTO users (name, email, hashed_password, created) VALUES(?, ?, ?, UTC_TIMESTAMP())`
 	if _, err := m.DB.Exec(stmt, name, email, hashedPassword); err != nil {
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) {
-			if mysqlErr.Number == 1062 && strings.Contains(mysqlErr.Message, "users_uniq_email") {
-				return models.ErrDuplicatedEmail
-			}
-		}
 		return err
 	}
 	return nil
