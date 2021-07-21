@@ -28,3 +28,16 @@ INSERT INTO snippets (title, content, created, expires)
 VALUES ('First autumn morning',
         'First autumn morning\nthe mirror I stare into\nshows my father''s face.\n\n– Murakami Kijo', UTC_TIMESTAMP(),
         DATE_ADD(UTC_TIMESTAMP(), INTERVAL 7 DAY));
+
+create table users
+(
+    id              integer      not null primary key auto_increment,
+    name            varchar(255) not null,
+    email           varchar(255) not null,
+    hashed_password char(60)     not null,
+    created         datetime     not null,
+    active          boolean      not null default true
+);
+
+alter table users
+    add constraint users_uniq_email unique (email);
