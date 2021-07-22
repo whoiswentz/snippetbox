@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/justinas/nosurf"
 	models "github.com/whoiswentz/snippetbox/pkg"
 	"net/http"
 	"runtime/debug"
@@ -30,6 +31,8 @@ func (app *application) addDefaultData(td *models.TemplateData, r *http.Request)
 	}
 	td.CurrentYear = time.Now().Year()
 	td.Flash = app.session.PopString(r, "flash")
+	td.IsAuthenticated = app.isAuthenticated(r)
+	td.CSRFToken = nosurf.Token(r)
 	return td
 }
 
@@ -49,4 +52,8 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	if _, err := buf.WriteTo(w); err != nil {
 		app.serverError(w, err)
 	}
+}
+
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.session.Exists(r, "authenticatedUserID")
 }
