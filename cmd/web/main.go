@@ -19,6 +19,10 @@ const (
 	key  = "./tls/key.pem"
 )
 
+type contextKey string
+
+const contextKeyIsAuthenticated = contextKey("isAuthenticated")
+
 type application struct {
 	infoLog       *log.Logger
 	errLog        *log.Logger
